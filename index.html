@@ -8,12 +8,11 @@
 <!--script async src="./opencv.js"></script-->
 
 <body onload="setSize()">
-    <button id="toggleStream" onclick="toggleStream()">Play</button>
-    <button id="cvtGray" onclick="cvtGray()" style="visibility: hidden;">Convert to Gray</button>
+    <button style="font-size: 1em; padding: 20px 30px 20px 30px;" id="toggleStream" onclick="toggleStream()">촬영</button>
+    <button style="font-size: 1em; padding: 20px 30px 20px 30px;" id="cvtGray" onclick="cvtGray()" style="visibility: hidden;">Detection</button>
     <br>
     <br>
     <video id="video"></video>
-    <br>
     <canvas id='output'></canvas>
 </body>
 <script>
@@ -60,7 +59,7 @@
             tracks.forEach(track => {
                 track.stop();
             });
-            document.getElementById('toggleStream').innerHTML = "Play";
+            document.getElementById('toggleStream').innerHTML = "촬영";
             document.getElementById('cvtGray').style.visibility = 'hidden';
         }
         streaming = !streaming;
