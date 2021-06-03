@@ -8,8 +8,8 @@
 <!--script async src="./opencv.js"></script-->
 
 <body onload="setSize()">
-    <button style="font-size: 1em; padding: 20px 30px 20px 30px;" id="toggleStream" onclick="toggleStream()">촬영</button>
-    <button style="font-size: 1em; padding: 20px 30px 20px 30px;" id="cvtGray" onclick="cvtGray()" style="visibility: hidden;">Detection</button>
+    <button id="toggleStream" onclick="toggleStream()" style="font-size: 1em; padding: 20px 30px 20px 30px;">촬영</button>
+    <button id="cvtGray" onclick="cvtGray()" style="visibility: hidden; font-size: 1.1em; padding: 20px 30px 20px 30px;">Detection</button>
     <br>
     <br>
     <video id="video"></video>
