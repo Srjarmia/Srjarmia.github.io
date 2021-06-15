@@ -1,86 +1,59 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>Smart Diagnosis</title>
+  <meta charset="utf-8">
+  <script async src="https://docs.opencv.org/3.4/opencv.js"></script>
+  <!--script async src="./opencv.js"></script-->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 </head>
-<script async src="https://docs.opencv.org/3.4/opencv.js"></script>
-<!--script async src="./opencv.js"></script-->
 
-<body onload="setSize()">
-    <button id="toggleStream" onclick="toggleStream()" style="font-size: 1em; padding: 20px 30px 20px 30px;">촬영</button>
-    <button id="cvtGray" onclick="cvtGray()" style="visibility: hidden; font-size: 1.1em; padding: 20px 30px 20px 30px;">Detection</button>
-    <br>
-    <br>
-    <video id="video"></video>
-    <canvas id='output'></canvas>
+<body>
+  <div class="container">
+    <video class="input_video"></video>
+    <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+  </div>
 </body>
-<script>
-    let width, height;
+<script type="module">
+const videoElement = document.getElementsByClassName('input_video')[0];
+const canvasElement = document.getElementsByClassName('output_canvas')[0];
+const canvasCtx = canvasElement.getContext('2d');
 
-    function setSize() {
-        if (window.orientation == 0) {
-            //portrait
-            width = 480; height = 640;
-        }
-        else {
-            //landscape
-            width = 640; height = 480;
-        }
+function onResults(results) {
+  canvasCtx.save();
+  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+  canvasCtx.drawImage(
+      results.image, 0, 0, canvasElement.width, canvasElement.height);
+  if (results.multiFaceLandmarks) {
+    for (const landmarks of results.multiFaceLandmarks) {
+      drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION,
+                     {color: '#C0C0C070', lineWidth: 1});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_RIGHT_EYE, {color: '#FF3030'});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_LEFT_EYE, {color: '#30FF30'});
     }
+  }
+  canvasCtx.restore();
+}
 
-    const constraints = {
-        video: { facingMode: "user", }, audio: false
-    };
-    const video = document.getElementById("video");
-    const canvas = document.getElementById('output');
-    canvas.width = width; canvas.height = height;
+const faceMesh = new FaceMesh({locateFile: (file) => {
+  return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
+}});
+faceMesh.setOptions({
+  maxNumFaces: 1,
+  minDetectionConfidence: 0.5,
+  minTrackingConfidence: 0.5
+});
+faceMesh.onResults(onResults);
 
-    function successCallback(stream) {
-        video.width = width; video.height = height;//prevent Opencv.js error.
-        video.srcObject = stream;
-        video.play();
-    }
-
-    function errorCallback(error) {
-        console.log(error);
-    }
-
-    let streaming = false;
-    function toggleStream() {
-        if (streaming === false) {
-            navigator.getUserMedia(constraints, successCallback, errorCallback);
-            document.getElementById('toggleStream').innerHTML = "Stop";
-            document.getElementById('cvtGray').style.visibility = 'visible';
-        }
-        else {
-            const stream = video.srcObject;
-            const tracks = stream.getTracks();
-            tracks.forEach(track => {
-                track.stop();
-            });
-            document.getElementById('toggleStream').innerHTML = "촬영";
-            document.getElementById('cvtGray').style.visibility = 'hidden';
-        }
-        streaming = !streaming;
-    }
-
-    let src, dist, cap;
-    function cvtGray() {
-        src = new cv.Mat(height, width, cv.CV_8UC4);
-        dst = new cv.Mat(height, width, cv.CV_8UC1);
-        cap = new cv.VideoCapture('video');
-        setTimeout(process, 33);
-    }
-
-    function process() {
-        if (streaming === true) {
-            cap.read(src);
-            cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-            cv.imshow('output', dst);
-            setTimeout(process, 33);
-        }
-    }
+const camera = new Camera(videoElement, {
+  onFrame: async () => {
+    await faceMesh.send({image: videoElement});
+  },
+  width: 1280,
+  height: 720
+});
+camera.start();
 </script>
-
 </html>
